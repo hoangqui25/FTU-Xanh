@@ -1,0 +1,71 @@
+{
+  "expo": {
+    "name": "FTU Xanh",
+    "slug": "ftu-xanh-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourname.recyclereward",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ứng dụng cần truy cập Camera để chụp ảnh phân loại rác."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.yourname.recyclereward",
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Cho phép ứng dụng dùng Camera để quét rác tích điểm."
+        }
+      ]
+    ],
+    "extra": {
+      "CLOUDINARY_CLOUD_NAME": "dosmdtm1s",
+      "CLOUDINARY_UPLOAD_PRESET": "reward_upload",
+      "FIREBASE_API_KEY": "AIzaSyBVgWDUr2k5Qf9_YzR1Fk1ME3WipMK5oVk",
+      "FIREBASE_AUTH_DOMAIN": "recycle-reward-6666.firebaseapp.com",
+      "FIREBASE_PROJECT_ID": "recycle-reward-6666",
+      "FIREBASE_STORAGE_BUCKET": "recycle-reward-6666.firebasestorage.app",
+      "FIREBASE_MESSAGING_SENDER_ID": "519394828498",
+      "FIREBASE_APP_ID": "1:519394828498:web:a67849daf34e8f20cfcd0b",
+      "FIREBASE_MEASUREMENT_ID": "G-X2C42V6749",
+      "eas": {
+        "projectId": "97f84e3c-8a1b-4b12-9d21-1c7e7541263d"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/97f84e3c-8a1b-4b12-9d21-1c7e7541263d"
+    }
+  }
+}
