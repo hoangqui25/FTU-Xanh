@@ -89,17 +89,18 @@ export const RewardService = {
         });
 
         // 4.4 Thêm vào "Quà của tôi" (My Rewards)
-        const voucherCode = generateVoucherCode(); // Hàm tạo mã code random
-        transaction.set(myRewardRef, {
+        // 4.4 Thêm vào "Quà của tôi" (My Rewards)
+        // Sử dụng helper createRedemption để đảm bảo dữ liệu chuẩn và có expiryDate đúng
+        const redemptionData = createRedemption({
           uid: uid,
           rewardId: rewardItem.id,
           rewardName: rewardData.name,
           rewardImage: rewardData.image || "",
-          code: voucherCode,
-          status: 'UNUSED', // Trạng thái: Chưa dùng
-          expiryDate: getExpiryDate(30), // Hết hạn sau 30 ngày
-          createdAt: serverTimestamp()
+          pointsUsed: price,
+          expiryDays: 30
         });
+
+        transaction.set(myRewardRef, redemptionData);
       });
 
       return { success: true, message: "Đổi quà thành công!" };
