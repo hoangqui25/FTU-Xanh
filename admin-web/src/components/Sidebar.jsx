@@ -1,7 +1,7 @@
 // src/components/Sidebar.jsx
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaRecycle, FaComments, FaSignOutAlt, FaLeaf, FaNewspaper } from 'react-icons/fa';
+import { FaRecycle, FaComments, FaSignOutAlt, FaLeaf, FaNewspaper, FaTrophy } from 'react-icons/fa';
 import { logoutAdmin } from '../services/auth';
 
 const Sidebar = () => {
@@ -70,6 +70,11 @@ const Sidebar = () => {
                 <Link to="/posts" style={getLinkStyle('/posts')}>
                     <FaNewspaper size={18} />
                     <span>Quản Lý Bài Viết</span>
+                </Link>
+
+                <Link to="/challenges" style={getLinkStyle('/challenges')}>
+                    <FaTrophy size={18} />
+                    <span>Quản Lý Thử Thách</span>
                 </Link>
             </nav>
 

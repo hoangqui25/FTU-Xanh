@@ -11,7 +11,8 @@ import {
     StatusBar,
     ActivityIndicator,
     RefreshControl,
-    ScrollView
+    ScrollView,
+    Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -135,6 +136,15 @@ export default function ActivitiesScreen() {
 
                 {/* Title */}
                 <Text style={styles.postTitle}>{item.title}</Text>
+
+                {/* Image */}
+                {item.images && item.images.length > 0 && (
+                    <Image
+                        source={{ uri: item.images[0] }}
+                        style={styles.postImage}
+                        resizeMode="cover"
+                    />
+                )}
 
                 {/* Content */}
                 <Text
@@ -329,6 +339,13 @@ const styles = StyleSheet.create({
         color: '#333',
         marginBottom: 10,
         lineHeight: 24
+    },
+    postImage: {
+        width: '100%',
+        height: 200,
+        borderRadius: 12,
+        marginBottom: 12,
+        backgroundColor: '#f0f0f0'
     },
     postContent: {
         fontSize: 14,

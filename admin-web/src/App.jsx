@@ -5,6 +5,7 @@ import AdminLayout from './layouts/AdminLayout';
 import VerificationPage from "./pages/VerificationPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import PostPage from "./pages/PostPage";
+import ChallengePage from "./pages/ChallengePage";
 import LoginPage from "./pages/LoginPage";
 
 // Component bảo vệ Route
@@ -35,6 +36,7 @@ function App() {
           <Route index element={<VerificationPage />} />
           <Route path="feedback" element={<FeedbackPage />} />
           <Route path="posts" element={<PostPage />} />
+          <Route path="challenges" element={<ChallengePage />} />
         </Route>
 
         {/* Catch all - Redirect to Login if not authorized, or Home if authorized */}

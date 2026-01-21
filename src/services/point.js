@@ -71,5 +71,41 @@ export const PointService = {
       console.error("❌ Lỗi PointService (getCurrentPoints):", error);
       return 0;
     }
+  },
+
+  /**
+   * 3. Cộng điểm trực tiếp (dùng cho Bonus, Rewards...)
+   * @param {number} amount - Số điểm cộng
+   * @param {string} reason - Lý do cộng điểm (title history)
+   */
+  addBonusPoints: async (amount, reason = "Thưởng thử thách") => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("Chưa đăng nhập");
+
+      // 1. Cộng điểm vào user
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        currentPoints: increment(amount),
+        lastUpdated: serverTimestamp()
+      });
+
+      // 2. Ghi lịch sử
+      const historyData = createHistory({
+        uid: user.uid,
+        action: HISTORY_ACTIONS.BONUS,
+        title: reason,
+        points: amount,
+        status: "APPROVED" // Bonus được duyệt ngay lập tức
+      });
+
+      await addDoc(collection(db, "history"), historyData);
+
+      console.log(`✅ Đã cộng ${amount} điểm cho user ${user.uid}`);
+      return true;
+    } catch (error) {
+      console.error("❌ Lỗi PointService (addBonusPoints):", error);
+      throw error;
+    }
   }
 };

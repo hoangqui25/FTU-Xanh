@@ -79,6 +79,9 @@ export const VerificationService = {
     /**
      * Duyệt yêu cầu và cộng điểm cho user
      */
+    /**
+     * Duyệt yêu cầu và cộng điểm cho user
+     */
     approveRequest: async (request) => {
         try {
             console.log("✅ [VerificationService] Approving request:", request.id);
@@ -105,6 +108,105 @@ export const VerificationService = {
                     lastUpdated: serverTimestamp()
                 });
                 console.log("✅ [VerificationService] Updated user points");
+            }
+
+            // 3. Cập nhật tiến độ Challenges (Daily Progress)
+            try {
+                // Lấy ngày của request để tính vào ngày đó
+                const requestDate = new Date(request.createdAt.seconds * 1000);
+                const dateStr = requestDate.toISOString().split('T')[0];
+
+                const progressRef = doc(db, "users", request.uid, "dailyProgress", dateStr);
+                const progressSnap = await getDoc(progressRef);
+
+                // Lấy danh sách thử thách hiện tại để tham chiếu hoặc tạo mới
+                const allChallengesSnap = await getDocs(collection(db, "challenges"));
+                const challengeMap = {};
+                allChallengesSnap.forEach(d => challengeMap[d.id] = d.data());
+
+                let progressData;
+
+                // Nếu chưa có progress doc (user chưa mở app hôm nay), tạo mới
+                if (!progressSnap.exists()) {
+                    console.log("⚠️ [VerificationService] Daily progress not found, creating new one...");
+                    const newChallenges = {};
+
+                    // Khởi tạo progress cho tất cả thử thách active
+                    Object.keys(challengeMap).forEach(id => {
+                        const challenge = challengeMap[id];
+                        if (challenge.isActive && challenge.type !== 'streak') { // Streak challenges handled separately or on login
+                            newChallenges[id] = {
+                                current: 0,
+                                completed: false,
+                                claimed: false
+                            };
+                        }
+                    });
+
+                    progressData = {
+                        date: dateStr,
+                        challenges: newChallenges,
+                        streak: 0,
+                        createdAt: serverTimestamp()
+                    };
+
+                    await setDoc(progressRef, progressData);
+                } else {
+                    progressData = progressSnap.data();
+                }
+
+                if (progressData) {
+                    const challenges = progressData.challenges || {};
+                    let hasUpdates = false;
+
+                    // Cập nhật các challenge loại RECYCLE_COUNT
+                    // Lưu ý: Cần loop qua cả những challenge chưa có trong progress (nếu user tạo progress trước khi có challenge mới)
+                    // Ở đây đơn giản hóa: chỉ loop qua những cái đã có trong challengeMap (active challenges)
+                    Object.keys(challengeMap).forEach(challengeId => {
+                        const template = challengeMap[challengeId];
+
+                        // Chỉ xử lý active challenges loại recycle_count
+                        if (template && template.isActive && template.type === 'recycle_count') {
+                            // Nếu challenge chưa có trong progress của user, khởi tạo nó
+                            if (!challenges[challengeId]) {
+                                challenges[challengeId] = {
+                                    current: 0,
+                                    completed: false,
+                                    claimed: false
+                                };
+                            }
+
+                            const challenge = challenges[challengeId];
+
+                            // Chỉ update nếu chưa hoàn thành
+                            if (!challenge.completed) {
+                                // Parse target count
+                                let target = 1;
+                                if (typeof template.targetCount === 'number') {
+                                    target = template.targetCount;
+                                } else if (typeof template.targetCount === 'string') {
+                                    const match = template.targetCount.match(/\d+/);
+                                    target = match ? parseInt(match[0]) : 1;
+                                }
+
+                                challenge.current = (challenge.current || 0) + 1;
+
+                                if (challenge.current >= target) {
+                                    challenge.completed = true;
+                                }
+                                hasUpdates = true;
+                            }
+                        }
+                    });
+
+                    if (hasUpdates) {
+                        await updateDoc(progressRef, { challenges });
+                        console.log("✅ [VerificationService] Updated daily challenges progress");
+                    }
+                }
+            } catch (err) {
+                console.error("⚠️ [VerificationService] Error updating challenges:", err);
+                // Không throw error ở đây để tránh block flow chính
             }
 
             // 2. Cập nhật status thành APPROVED (giữ lại lịch sử)

@@ -8,7 +8,9 @@ import {
     getDoc,
     setDoc,
     updateDoc,
-    serverTimestamp
+    serverTimestamp,
+    query,
+    orderBy
 } from "firebase/firestore";
 import { PointService } from "./point";
 import {
@@ -32,12 +34,17 @@ export const ChallengeService = {
 
             // A. Lấy danh sách thử thách từ collection 'challenges'
             const challengesRef = collection(db, "challenges");
-            const challengesSnap = await getDocs(challengesRef);
+            // Sắp xếp theo thời gian tạo mới nhất
+            const q = query(challengesRef, orderBy('createdAt', 'desc'));
+            const challengesSnap = await getDocs(q);
 
             const challengesList = [];
             challengesSnap.forEach((docSnap) => {
-                // Sử dụng parseChallenge để chuẩn hóa dữ liệu
-                challengesList.push(parseChallenge(docSnap.data(), docSnap.id));
+                const challenge = parseChallenge(docSnap.data(), docSnap.id);
+                // Chỉ hiển thị thử thách đang active
+                if (challenge.isActive !== false) {
+                    challengesList.push(challenge);
+                }
             });
 
             // B. Lấy tiến độ của user hôm nay
@@ -123,9 +130,19 @@ export const ChallengeService = {
                 const original = challengeMap[id];
                 if (original && original.type === CHALLENGE_TYPES.RECYCLE_COUNT) {
                     const challenge = updatedChallenges[id];
+
+                    // Parse target count (support number or string like "3 times")
+                    let target = 1;
+                    if (typeof original.targetCount === 'number') {
+                        target = original.targetCount;
+                    } else if (typeof original.targetCount === 'string') {
+                        const match = original.targetCount.match(/\d+/);
+                        target = match ? parseInt(match[0]) : 1;
+                    }
+
                     if (!challenge.completed) {
                         challenge.current = (challenge.current || 0) + 1;
-                        if (challenge.current >= original.targetCount) {
+                        if (challenge.current >= target) {
                             challenge.completed = true;
                         }
                     }
@@ -144,30 +161,51 @@ export const ChallengeService = {
      */
     claimBonus: async (challengeId, bonusPoints) => {
         try {
+            console.log(`🎁 [claimBonus] Request for challenge: ${challengeId}, points: ${bonusPoints}`);
+
+            // Debug PointService
+            console.log("🔍 [claimBonus] PointService keys:", Object.keys(PointService));
+            if (typeof PointService.addBonusPoints !== 'function') {
+                console.error("❌ [claimBonus] PointService.addBonusPoints is NOT a function! Please reload app.");
+                throw new Error("Lỗi hệ thống: Cần reload app để cập nhật code mới");
+            }
+
             const user = auth.currentUser;
             if (!user) throw new Error("Chưa đăng nhập");
 
             const today = getTodayString();
+            console.log(`📅 [claimBonus] Date: ${today}`);
+
             const progressRef = doc(db, "users", user.uid, "dailyProgress", today);
             const progressSnap = await getDoc(progressRef);
 
             if (!progressSnap.exists()) {
-                throw new Error("Không tìm thấy dữ liệu tiến độ");
+                console.error(`❌ [claimBonus] No progress doc found for date: ${today}`);
+                throw new Error("Không tìm thấy dữ liệu tiến độ ngày hôm nay");
             }
 
             const data = progressSnap.data();
             const challenges = data.challenges || {};
+            const challenge = challenges[challengeId];
 
-            if (!challenges[challengeId]?.completed) {
+            console.log(`🔍 [claimBonus] Challenge data:`, JSON.stringify(challenge));
+
+            if (!challenge) {
+                throw new Error("Không tìm thấy thông tin thử thách này trong tiến độ");
+            }
+
+            if (!challenge.completed) {
+                console.warn(`⚠️ [claimBonus] Challenge not completed. Status:`, challenge);
                 throw new Error("Thử thách chưa hoàn thành");
             }
 
-            if (challenges[challengeId]?.claimed) {
+            if (challenge.claimed) {
+                console.warn(`⚠️ [claimBonus] Already claimed.`);
                 throw new Error("Đã nhận thưởng rồi");
             }
 
             // Cộng điểm bonus
-            await PointService.addPoints(bonusPoints);
+            await PointService.addBonusPoints(bonusPoints);
 
             // Đánh dấu đã nhận thưởng
             challenges[challengeId].claimed = true;

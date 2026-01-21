@@ -52,10 +52,10 @@ export const FeedbackService = {
                 throw new Error("Bạn cần đăng nhập");
             }
 
+            // Query without orderBy to avoid composite index requirement
             const q = query(
                 collection(db, 'feedbacks'),
-                where('uid', '==', user.uid),
-                orderBy('createdAt', 'desc')
+                where('uid', '==', user.uid)
             );
 
             const querySnapshot = await getDocs(q);
@@ -66,6 +66,13 @@ export const FeedbackService = {
                     id: doc.id,
                     ...doc.data()
                 });
+            });
+
+            // Sort on client-side by createdAt descending
+            feedbacks.sort((a, b) => {
+                const timeA = a.createdAt?.seconds || 0;
+                const timeB = b.createdAt?.seconds || 0;
+                return timeB - timeA; // Descending order (newest first)
             });
 
             return feedbacks;
