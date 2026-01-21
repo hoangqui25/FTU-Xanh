@@ -30,6 +30,9 @@
       "permissions": [
         "CAMERA",
         "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "CAMERA",
+        "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -61,6 +64,9 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "owner": "hoangqui25"
+    "owner": "hoangqui25",
+    "updates": {
+      "url": "https://u.expo.dev/7f314979-b4b2-40a9-b574-247486307702"
+    }
   }
 }
